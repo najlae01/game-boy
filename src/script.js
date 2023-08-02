@@ -16,13 +16,45 @@ import portalFragmentShader from './shaders/portal/fragment.glsl'
 // var spector = new SPECTOR.Spector()
 // spector.displayUI()
 
+// Texture loader
+const textureLoader = new THREE.TextureLoader()
+
+const worriedFaceTexture = textureLoader.load('textures/face/worried.png')
+
+// Create video and play
+const sleepytextureVid = document.createElement('video')
+sleepytextureVid.src = 'textures/face/sleeping.mp4'
+sleepytextureVid.loop = true
+
+// Load video texture
+const sleepyFaceTexture = new THREE.VideoTexture(sleepytextureVid)
+sleepyFaceTexture.format = THREE.RGBAFormat
+sleepyFaceTexture.minFilter = THREE.NearestFilter
+sleepyFaceTexture.maxFilter = THREE.NearestFilter
+sleepyFaceTexture.generateMipmaps = false
+
+// Create happy face video and play
+const originalVideoSrc = 'textures/face/happyblink.mp4'
+const textureVid = document.createElement('video')
+textureVid.src = originalVideoSrc
+textureVid.loop = true
+document.addEventListener('click', () => {
+  // Play the video once the user clicks anywhere on the page.
+  textureVid.play()
+})
+// Load video texture
+const happyFace = new THREE.VideoTexture(textureVid)
+happyFace.format = THREE.RGBAFormat
+happyFace.minFilter = THREE.NearestFilter
+happyFace.maxFilter = THREE.NearestFilter
+happyFace.generateMipmaps = false
+
 /**
  * Functions
  */
 
 const raycaster = new THREE.Raycaster()
 const beeInstances = []
-let beeExplosed = false
 
 function raycast(event) {
   const mouse = new THREE.Vector2()
@@ -69,8 +101,22 @@ function removeBee(beeInstance) {
     ) {
       randomPositions.splice(beeIndex, 1)
     }
+    faceMaterial.map = worriedFaceTexture
+
+    // Revert back to the happy face after 3 seconds
+    setTimeout(() => {
+      faceMaterial.map = happyFace
+    }, 3000)
     // console.log('Bee removed', beeInstance.name)
   }
+}
+
+// Function to change the video source and switch back to the original video after 3 seconds
+function changeVideoSource(newSrc) {
+  textureVid.src = newSrc
+  setTimeout(() => {
+    textureVid.src = originalVideoSrc
+  }, 3000)
 }
 
 /**
@@ -93,8 +139,6 @@ const scene = new THREE.Scene()
 /**
  * Loaders
  */
-// Texture loader
-const textureLoader = new THREE.TextureLoader()
 
 // Draco loader
 const dracoLoader = new DRACOLoader()
@@ -121,26 +165,9 @@ const bakedGround = textureLoader.load('textures/grass/baking-ground.jpg')
 bakedGround.flipY = false
 bakedGround.colorSpace = THREE.SRGBColorSpace
 
-// Create video and play
-const textureVid = document.createElement('video')
-textureVid.src = `textures/face/happyblink.mp4` // transform gif to mp4
-textureVid.loop = true
-document.addEventListener('click', () => {
-  // Play the video once the user clicks anywhere on the page.
-  textureVid.play()
-})
-
-// Load video texture
-const straightFace = new THREE.VideoTexture(textureVid)
-straightFace.format = THREE.RGBAFormat
-straightFace.minFilter = THREE.NearestFilter
-straightFace.maxFilter = THREE.NearestFilter
-straightFace.generateMipmaps = false
-
 // const straightFace = textureLoader.load('happyblink.gif')
 
-// pole Light Material
-const faceMaterial = new THREE.MeshBasicMaterial({ map: straightFace })
+const faceMaterial = new THREE.MeshBasicMaterial({ map: sleepyFaceTexture })
 
 const groundMaterial = new THREE.MeshBasicMaterial({ map: bakedGround })
 
@@ -175,7 +202,11 @@ gltfLoader.load('game-boy.glb', (gltf) => {
   })
   const face = gltf.scene.children.find((child) => child.name === 'face')
   face.material = faceMaterial
-  const animations = gltf.animations
+  // Revert back to the happy face after 3 seconds
+  setTimeout(() => {
+    faceMaterial.map = happyFace
+  }, 8000)
+  // const animations = gltf.animations
   // console.log(animations) // Check if animations are present
   // load the animation
 
