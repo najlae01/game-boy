@@ -62,10 +62,6 @@ const bakedGround = textureLoader.load('textures/grass/baking-ground.jpg')
 bakedGround.flipY = false
 bakedGround.colorSpace = THREE.SRGBColorSpace
 
-const bakedView = textureLoader.load('textures/view.jpg')
-bakedView.flipY = false
-bakedView.colorSpace = THREE.SRGBColorSpace
-
 // Create video and play
 const textureVid = document.createElement('video')
 textureVid.src = `textures/face/happyblink.mp4` // transform gif to mp4
@@ -89,8 +85,6 @@ const faceMaterial = new THREE.MeshBasicMaterial({ map: straightFace })
 
 const groundMaterial = new THREE.MeshBasicMaterial({ map: bakedGround })
 
-const viewMaterial = new THREE.MeshBasicMaterial({ map: bakedView })
-
 // portal Light material
 const portalLightMaterial = new THREE.ShaderMaterial({
   uniforms: {
@@ -112,6 +106,7 @@ const bakedTreeMaterial = new THREE.MeshBasicMaterial({ map: bakedTree })
  */
 let mixer
 gltfLoader.load('game-boy.glb', (gltf) => {
+  mixer = new THREE.AnimationMixer(gltf.scene)
   console.log(gltf)
   gltf.scene.scale.set(0.7, 0.7, 0.7)
   gltf.scene.position.y = 0.07
@@ -124,7 +119,7 @@ gltfLoader.load('game-boy.glb', (gltf) => {
   const animations = gltf.animations
   console.log(animations) // Check if animations are present
   // load the animation
-  mixer = new THREE.AnimationMixer(gltf.scene)
+
   mixer.clipAction(gltf.animations[1]).play()
   mixer.clipAction(gltf.animations[4]).play()
 
@@ -154,26 +149,155 @@ gltfLoader.load('ground.glb', (gltf) => {
   scene.add(gltf.scene)
 })
 
+/**
+ * BreezyBees
+ */
+const breezyBeeCount = 50
+const positionBeeArray = new Float32Array(breezyBeeCount * 3)
+const scaleBeeArray = new Float32Array(breezyBeeCount)
+
+for (let i = 0; i < breezyBeeCount; i++) {
+  positionBeeArray[i * 3] = (Math.random() - 0.5) * 40
+  positionBeeArray[i * 3 + 1] = (Math.random() + 0.5) * 5
+  positionBeeArray[i * 3 + 2] = (Math.random() - 0.5) * 30
+
+  // Generate a random scale between 0.5 and 1
+  scaleBeeArray[i] = 0.07 + Math.random() * 0.15
+}
+
+let beeMixer
+gltfLoader.load(
+  'breezy.glb',
+  (gltf) => {
+    beeMixer = new THREE.AnimationMixer(gltf.scene)
+
+    console.log('breezy')
+    console.log(gltf)
+    gltf.scene.scale.set(0.2, 0.2, 0.2)
+    gltf.scene.position.y = 4
+    gltf.scene.position.x = 6
+    const animations = gltf.animations
+    console.log(animations) // Check if animations are present
+    // load the animation
+    //   beeMixer.clipAction(gltf.animations[1]).play()
+    //   beeMixer.clipAction(gltf.animations[2]).play()
+
+    //   // Add the breezy bees to the scene
+    //   for (let i = 0; i < breezyBeeCount; i++) {
+    //     const beeInstance = gltf.scene.clone()
+    //     beeInstance.position.set(
+    //       positionBeeArray[i * 3],
+    //       positionBeeArray[i * 3 + 1],
+    //       positionBeeArray[i * 3 + 2]
+    //     )
+
+    //     beeInstance.name = 'breezyBee_' + i
+
+    //     beeInstance.scale.set(scaleBeeArray[i], scaleBeeArray[i], scaleBeeArray[i])
+
+    //     // Generate a random rotation angle around the Y-axis
+    //     const randomRotationY = Math.random() * Math.PI * 2
+    //     beeInstance.rotation.y = randomRotationY
+
+    //     scene.add(beeInstance)
+    //   }
+    // })
+
+    if (animations && animations.length >= 3) {
+      beeMixer.clipAction(animations[1]).play()
+      beeMixer.clipAction(animations[2]).play()
+    } else {
+      console.error('Error: No valid animations found in the GLTF file.')
+      return
+    }
+
+    function checkCollision(position, boundingSphereRadius) {
+      for (const object of scene.children) {
+        // Check if the object is a 3D mesh with a valid geometry and boundingSphere
+        if (
+          object.isMesh &&
+          object.geometry &&
+          object.geometry.boundingSphere
+        ) {
+          const distance = position.distanceTo(object.position)
+          if (
+            distance <
+            boundingSphereRadius + object.geometry.boundingSphere.radius
+          ) {
+            return true // Collision detected
+          }
+        }
+      }
+      return false // No collision
+    }
+
+    // Add the breezy bees to the scene with random Y rotation and non-overlapping positions
+    const beeBoundingSphereRadius = 1 // Adjust this value based on your bee model size
+
+    for (let i = 0; i < breezyBeeCount; i++) {
+      const beeInstance = gltf.scene.clone()
+      beeInstance.name = 'breezyBee_' + i
+
+      // beeInstance.position.set(
+      //   positionBeeArray[i * 3],
+      //   positionBeeArray[i * 3 + 1],
+      //   positionBeeArray[i * 3 + 2]
+      // )
+
+      // Generate a random rotation angle around the Y-axis
+      const randomRotationY = Math.random() * Math.PI * 2
+      beeInstance.rotation.y = randomRotationY
+
+      // Generate a random position and check for collisions
+      // let newPosition = new THREE.Vector3()
+      // let collisionDetected = true
+      // while (collisionDetected) {
+      //   newPosition.set(
+      //     (Math.random() - 0.5) * 4,
+      //     Math.random() * 1.5,
+      //     (Math.random() - 0.5) * 4
+      //   )
+      //   collisionDetected = checkCollision(newPosition, beeBoundingSphereRadius)
+      // }
+
+      // beeInstance.position.copy(newPosition)
+
+      // Generate a random scale between 0.5 and 1
+      beeInstance.scale.set(
+        scaleBeeArray[i],
+        scaleBeeArray[i],
+        scaleBeeArray[i]
+      )
+
+      scene.add(beeInstance)
+    }
+  },
+  undefined,
+  (error) => {
+    console.error('Error loading the GLTF file:', error)
+  }
+)
+
 const ambientLight = new THREE.AmbientLight('#ffffff', 0.5)
 scene.add(ambientLight)
 
-// const directionalLight = new THREE.DirectionalLight('#00ff00', 0.3)
-// directionalLight.position.set(1, 0.25, 0)
-// scene.add(directionalLight)
+const directionalLight = new THREE.DirectionalLight('#CDC942', 0.3)
+directionalLight.position.set(1, 0.25, 0)
+scene.add(directionalLight)
 /**testing ends */
 
 /**
  * FireFlies
  */
 const fireFliesGeometry = new THREE.BufferGeometry()
-const fireFliesCount = 30
+const fireFliesCount = 70
 const positionArray = new Float32Array(fireFliesCount * 3)
 const scaleArray = new Float32Array(fireFliesCount)
 
 for (let i = 0; i < fireFliesCount; i++) {
-  positionArray[i * 3] = (Math.random() - 0.5) * 4
-  positionArray[i * 3 + 1] = Math.random() * 1.5
-  positionArray[i * 3 + 2] = (Math.random() - 0.5) * 4
+  positionArray[i * 3] = (Math.random() - 0.5) * 20
+  positionArray[i * 3 + 1] = (Math.random() + 4) * 5
+  positionArray[i * 3 + 2] = (Math.random() - 0.5) * 20
 
   scaleArray[i] = Math.random() * 2
 }
@@ -277,11 +401,56 @@ gui.addColor(debugObject, 'clearColor').onChange(() => {
   renderer.setClearColor(debugObject.clearColor)
 })
 
+const beeMoveSpeed = 0.2 // Adjust the move speed as desired
+const circleRadius = 2 // Radius of the circular path
+
 /**
  * Animate
  */
 const clock = new THREE.Clock()
 let previousTime = 0
+
+const randomPositions = []
+
+for (let i = 0; i < breezyBeeCount; i++) {
+  const randomPosition = new THREE.Vector3() // Initialize as a THREE.Vector3
+  randomPosition.x = Math.random() * 4
+  randomPosition.y = Math.random() * 4
+  randomPosition.z = Math.random() * 4
+  randomPositions.push(randomPosition) // Add the randomPosition to the array
+}
+
+function updateBeeMovement() {
+  const elapsedTime = clock.getElapsedTime()
+  previousTime = elapsedTime
+  for (let i = 0; i < breezyBeeCount; i++) {
+    const beeInstance = scene.getObjectByName('breezyBee_' + i)
+
+    if (beeInstance) {
+      // Calculate the angle for the circular path based on the elapsed time and bee index
+      const angleX = randomPositions[i].x + 
+        elapsedTime * beeMoveSpeed +
+        (randomPositions[i].x * 5 + i * (Math.PI * 2)) / breezyBeeCount
+
+      const angleZ = randomPositions[i].z +
+        elapsedTime * beeMoveSpeed +
+        (randomPositions[i].y * 5 + i * (Math.PI * 2)) / breezyBeeCount
+
+      // Calculate the new position on the circular path
+      const x =
+        Math.cos(angleX) * circleRadius * (7 + Math.sin(elapsedTime * 0.32))
+      const z =
+        Math.sin(angleZ) * circleRadius * (7 + Math.sin(elapsedTime * 0.5))
+
+      // Update the bee's position
+      beeInstance.position.x = x
+      beeInstance.position.z = z
+      beeInstance.position.y = randomPositions[i].y + 2
+      beeInstance.rotation.y =
+        Math.sin(elapsedTime) + Math.sin(elapsedTime * 2.5) * 0.01
+    }
+  }
+}
 
 const tick = () => {
   const elapsedTime = clock.getElapsedTime()
@@ -294,6 +463,10 @@ const tick = () => {
 
   // Inside your render loop
   if (mixer != null) mixer.update(deltaTime)
+
+  if (beeMixer != null) beeMixer.update(deltaTime)
+
+  updateBeeMovement()
 
   // Update controls
   controls.update()
