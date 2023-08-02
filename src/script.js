@@ -17,6 +17,62 @@ import portalFragmentShader from './shaders/portal/fragment.glsl'
 // spector.displayUI()
 
 /**
+ * Functions
+ */
+
+const raycaster = new THREE.Raycaster()
+const beeInstances = []
+
+function raycast(event) {
+  const mouse = new THREE.Vector2()
+  mouse.x = (event.clientX / sizes.width) * 2 - 1
+  mouse.y = -(event.clientY / sizes.height) * 2 + 1
+
+  raycaster.setFromCamera(mouse, camera)
+
+  const intersects = raycaster.intersectObjects(beeInstances, true)
+
+  if (intersects.length > 0) {
+    // console.log('Bee clicked')
+    const clickedObject = intersects[0].object
+    const parentName = clickedObject.parent ? clickedObject.parent.name : null
+    // console.log(clickedObject.name)
+
+    if (
+      clickedObject.name.startsWith('Cube007') ||
+      clickedObject.name.startsWith('wingL') ||
+      clickedObject.name.startsWith('wingR')
+    ) {
+      // console.log('Removing bee:', clickedObject.parent.parent.name)
+      removeBee(clickedObject.parent.parent)
+    }
+  }
+}
+
+function removeBee(beeInstance) {
+  // console.log('Inside removeBee start :', beeInstance.name)
+  // Check if the beeInstance is in the scene
+  const index = beeInstances.indexOf(beeInstance)
+  if (index !== -1) {
+    // Remove the bee from the scene
+    scene.remove(beeInstance)
+    // Remove the bee from the beeInstances array
+    beeInstances.splice(index, 1)
+
+    // Remove the corresponding position from the randomPositions array
+    const beeIndex = parseInt(beeInstance.name.replace('breezyBee_', ''))
+    if (
+      !isNaN(beeIndex) &&
+      beeIndex >= 0 &&
+      beeIndex < randomPositions.length
+    ) {
+      randomPositions.splice(beeIndex, 1)
+    }
+    // console.log('Bee removed', beeInstance.name)
+  }
+}
+
+/**
  * Base
  */
 // Debug
@@ -27,6 +83,8 @@ const gui = new dat.GUI({
 
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
+
+canvas.addEventListener('click', raycast)
 
 // Scene
 const scene = new THREE.Scene()
@@ -107,7 +165,7 @@ const bakedTreeMaterial = new THREE.MeshBasicMaterial({ map: bakedTree })
 let mixer
 gltfLoader.load('game-boy.glb', (gltf) => {
   mixer = new THREE.AnimationMixer(gltf.scene)
-  console.log(gltf)
+  // console.log(gltf)
   gltf.scene.scale.set(0.7, 0.7, 0.7)
   gltf.scene.position.y = 0.07
   gltf.scene.position.x = 0.45
@@ -117,7 +175,7 @@ gltfLoader.load('game-boy.glb', (gltf) => {
   const face = gltf.scene.children.find((child) => child.name === 'face')
   face.material = faceMaterial
   const animations = gltf.animations
-  console.log(animations) // Check if animations are present
+  // console.log(animations) // Check if animations are present
   // load the animation
 
   mixer.clipAction(gltf.animations[1]).play()
@@ -127,7 +185,7 @@ gltfLoader.load('game-boy.glb', (gltf) => {
 })
 
 gltfLoader.load('stylized-tree.glb', (gltf) => {
-  console.log(gltf.scene.children[0])
+  // console.log(gltf.scene.children[0])
   gltf.scene.children[0].material = bakedTreeMaterial
   gltf.scene.children[0].scale.set(1.5, 1.5, 1.5)
   gltf.scene.children[0].rotateY((5 * Math.PI) / 6)
@@ -138,7 +196,7 @@ gltfLoader.load('stylized-tree.glb', (gltf) => {
 })
 
 gltfLoader.load('ground.glb', (gltf) => {
-  console.log(gltf)
+  // console.log(gltf)
   gltf.scene.rotateY(-Math.PI / 2)
   gltf.scene.position.z = -1.5
   gltf.scene.position.y = -0.4
@@ -165,111 +223,45 @@ for (let i = 0; i < breezyBeeCount; i++) {
   scaleBeeArray[i] = 0.07 + Math.random() * 0.15
 }
 
-let beeMixer
+let beeMixer = []
+let beeModel
 gltfLoader.load(
   'breezy.glb',
   (gltf) => {
-    beeMixer = new THREE.AnimationMixer(gltf.scene)
-
-    console.log('breezy')
-    console.log(gltf)
-    gltf.scene.scale.set(0.2, 0.2, 0.2)
-    gltf.scene.position.y = 4
-    gltf.scene.position.x = 6
-    const animations = gltf.animations
-    console.log(animations) // Check if animations are present
-    // load the animation
-    //   beeMixer.clipAction(gltf.animations[1]).play()
-    //   beeMixer.clipAction(gltf.animations[2]).play()
-
-    //   // Add the breezy bees to the scene
-    //   for (let i = 0; i < breezyBeeCount; i++) {
-    //     const beeInstance = gltf.scene.clone()
-    //     beeInstance.position.set(
-    //       positionBeeArray[i * 3],
-    //       positionBeeArray[i * 3 + 1],
-    //       positionBeeArray[i * 3 + 2]
-    //     )
-
-    //     beeInstance.name = 'breezyBee_' + i
-
-    //     beeInstance.scale.set(scaleBeeArray[i], scaleBeeArray[i], scaleBeeArray[i])
-
-    //     // Generate a random rotation angle around the Y-axis
-    //     const randomRotationY = Math.random() * Math.PI * 2
-    //     beeInstance.rotation.y = randomRotationY
-
-    //     scene.add(beeInstance)
-    //   }
-    // })
-
-    if (animations && animations.length >= 3) {
-      beeMixer.clipAction(animations[1]).play()
-      beeMixer.clipAction(animations[2]).play()
-    } else {
-      console.error('Error: No valid animations found in the GLTF file.')
-      return
-    }
-
-    function checkCollision(position, boundingSphereRadius) {
-      for (const object of scene.children) {
-        // Check if the object is a 3D mesh with a valid geometry and boundingSphere
-        if (
-          object.isMesh &&
-          object.geometry &&
-          object.geometry.boundingSphere
-        ) {
-          const distance = position.distanceTo(object.position)
-          if (
-            distance <
-            boundingSphereRadius + object.geometry.boundingSphere.radius
-          ) {
-            return true // Collision detected
-          }
-        }
-      }
-      return false // No collision
-    }
-
-    // Add the breezy bees to the scene with random Y rotation and non-overlapping positions
-    const beeBoundingSphereRadius = 1 // Adjust this value based on your bee model size
+    // console.log('breezy')
+    // console.log(gltf)
+    beeModel = gltf.scene
+    beeModel.scale.set(0.2, 0.2, 0.2)
+    beeModel.position.y = 4
+    beeModel.position.x = 6
 
     for (let i = 0; i < breezyBeeCount; i++) {
-      const beeInstance = gltf.scene.clone()
+      const beeInstance = beeModel.clone()
       beeInstance.name = 'breezyBee_' + i
 
-      // beeInstance.position.set(
-      //   positionBeeArray[i * 3],
-      //   positionBeeArray[i * 3 + 1],
-      //   positionBeeArray[i * 3 + 2]
-      // )
-
-      // Generate a random rotation angle around the Y-axis
       const randomRotationY = Math.random() * Math.PI * 2
       beeInstance.rotation.y = randomRotationY
-
-      // Generate a random position and check for collisions
-      // let newPosition = new THREE.Vector3()
-      // let collisionDetected = true
-      // while (collisionDetected) {
-      //   newPosition.set(
-      //     (Math.random() - 0.5) * 4,
-      //     Math.random() * 1.5,
-      //     (Math.random() - 0.5) * 4
-      //   )
-      //   collisionDetected = checkCollision(newPosition, beeBoundingSphereRadius)
-      // }
-
-      // beeInstance.position.copy(newPosition)
-
-      // Generate a random scale between 0.5 and 1
       beeInstance.scale.set(
         scaleBeeArray[i],
         scaleBeeArray[i],
         scaleBeeArray[i]
       )
+      // Create an AnimationMixer for each bee instance
+      const mixer = new THREE.AnimationMixer(beeInstance)
+      const animations = gltf.animations
+      // console.log(animations) // Check if animations are present
+      if (animations && animations.length >= 0) {
+        mixer.clipAction(animations[1]).play()
+        mixer.clipAction(animations[2]).play()
+      } else {
+        console.error('Error: No valid animations found in the GLTF file.')
+        return
+      }
+      beeMixer.push(mixer)
 
       scene.add(beeInstance)
+
+      beeInstances.push(beeInstance)
     }
   },
   undefined,
@@ -401,7 +393,7 @@ gui.addColor(debugObject, 'clearColor').onChange(() => {
   renderer.setClearColor(debugObject.clearColor)
 })
 
-const beeMoveSpeed = 0.2 // Adjust the move speed as desired
+const beeMoveSpeed = 0.1 // Adjust the move speed as desired
 const circleRadius = 2 // Radius of the circular path
 
 /**
@@ -423,16 +415,19 @@ for (let i = 0; i < breezyBeeCount; i++) {
 function updateBeeMovement() {
   const elapsedTime = clock.getElapsedTime()
   previousTime = elapsedTime
-  for (let i = 0; i < breezyBeeCount; i++) {
-    const beeInstance = scene.getObjectByName('breezyBee_' + i)
+  for (let i = 0; i < beeInstances.length; i++) {
+    const beeInstance = beeInstances[i]
 
     if (beeInstance) {
+      // Add a check here to ensure beeInstance exists
       // Calculate the angle for the circular path based on the elapsed time and bee index
-      const angleX = randomPositions[i].x + 
+      const angleX =
+        randomPositions[i].x +
         elapsedTime * beeMoveSpeed +
         (randomPositions[i].x * 5 + i * (Math.PI * 2)) / breezyBeeCount
 
-      const angleZ = randomPositions[i].z +
+      const angleZ =
+        randomPositions[i].z +
         elapsedTime * beeMoveSpeed +
         (randomPositions[i].y * 5 + i * (Math.PI * 2)) / breezyBeeCount
 
@@ -464,7 +459,10 @@ const tick = () => {
   // Inside your render loop
   if (mixer != null) mixer.update(deltaTime)
 
-  if (beeMixer != null) beeMixer.update(deltaTime)
+  for (let i = 0; i < beeMixer.length; i++) {
+    const mixer = beeMixer[i]
+    if (mixer) mixer.update(deltaTime)
+  }
 
   updateBeeMovement()
 
