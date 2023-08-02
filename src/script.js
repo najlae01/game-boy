@@ -22,6 +22,7 @@ import portalFragmentShader from './shaders/portal/fragment.glsl'
 
 const raycaster = new THREE.Raycaster()
 const beeInstances = []
+let beeExplosed = false
 
 function raycast(event) {
   const mouse = new THREE.Vector2()
