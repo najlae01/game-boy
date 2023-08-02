@@ -68,7 +68,7 @@ bakedView.colorSpace = THREE.SRGBColorSpace
 
 // Create video and play
 const textureVid = document.createElement('video')
-textureVid.src = `happyblink.mp4` // transform gif to mp4
+textureVid.src = `textures/face/happyblink.mp4` // transform gif to mp4
 textureVid.loop = true
 document.addEventListener('click', () => {
   // Play the video once the user clicks anywhere on the page.
