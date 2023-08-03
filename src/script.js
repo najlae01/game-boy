@@ -65,6 +65,18 @@ const textureLoader = new THREE.TextureLoader()
 const worriedFaceTexture = textureLoader.load('textures/face/worried.png')
 
 // Create video and play
+const relaxedtextureVid = document.createElement('video')
+relaxedtextureVid.src = 'textures/face/simplesmileblink.mp4'
+relaxedtextureVid.loop = true
+
+// Load video texture
+const relaxedFaceTexture = new THREE.VideoTexture(relaxedtextureVid)
+relaxedFaceTexture.format = THREE.RGBAFormat
+relaxedFaceTexture.minFilter = THREE.NearestFilter
+relaxedFaceTexture.maxFilter = THREE.NearestFilter
+relaxedFaceTexture.generateMipmaps = false
+
+// Create video and play
 const sleepytextureVid = document.createElement('video')
 sleepytextureVid.src = 'textures/face/sleeping.mp4'
 sleepytextureVid.loop = true
@@ -77,14 +89,11 @@ sleepyFaceTexture.maxFilter = THREE.NearestFilter
 sleepyFaceTexture.generateMipmaps = false
 
 // Create happy face video and play
-const originalVideoSrc = 'textures/face/happyblink.mp4'
+const originalVideoSrc = 'textures/face/simplesmileblink.mp4'
 const textureVid = document.createElement('video')
-textureVid.src = originalVideoSrc
+textureVid.src = 'textures/face/happyblink.mp4'
 textureVid.loop = true
-document.addEventListener('click', () => {
-  // Play the video once the user clicks anywhere on the page.
-  textureVid.play()
-})
+
 // Load video texture
 const happyFace = new THREE.VideoTexture(textureVid)
 happyFace.format = THREE.RGBAFormat
@@ -150,18 +159,10 @@ function removeBee(beeInstance) {
 
     // Revert back to the happy face after 3 seconds
     setTimeout(() => {
-      faceMaterial.map = happyFace
+      faceMaterial.map = relaxedFaceTexture
     }, 3000)
     // console.log('Bee removed', beeInstance.name)
   }
-}
-
-// Function to change the video source and switch back to the original video after 3 seconds
-function changeVideoSource(newSrc) {
-  textureVid.src = newSrc
-  setTimeout(() => {
-    textureVid.src = originalVideoSrc
-  }, 3000)
 }
 
 /**
@@ -238,7 +239,7 @@ const bakedTreeMaterial = new THREE.MeshBasicMaterial({ map: bakedTree })
 let mixer
 gltfLoader.load('game-boy.glb', (gltf) => {
   mixer = new THREE.AnimationMixer(gltf.scene)
-  console.log(gltf)
+  // console.log(gltf)
   gltf.scene.scale.set(0.7, 0.7, 0.7)
   gltf.scene.position.y = 0.07
   gltf.scene.position.x = 0.45
@@ -258,6 +259,10 @@ gltfLoader.load('game-boy.glb', (gltf) => {
     sayingHiAction.setLoop(THREE.LoopOnce)
     sayingHiAction.play()
   }, 8000)
+
+  setTimeout(() => {
+    faceMaterial.map = relaxedFaceTexture
+  }, 16000)
 
   sittingOnGroundAction.play()
   actionFace.play()
