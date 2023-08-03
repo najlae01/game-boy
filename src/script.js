@@ -26,6 +26,15 @@ const listener = new THREE.AudioListener()
 const audioLoader = new THREE.AudioLoader()
 
 // create a global audio source
+const grassLands = new THREE.Audio(listener)
+
+audioLoader.load('audio/grass-lands.mp3', function (buffer) {
+  grassLands.setBuffer(buffer)
+  grassLands.setLoop(true)
+  grassLands.setVolume(0.8)
+  grassLands.play()
+})
+
 const popSound = new THREE.Audio(listener)
 
 audioLoader.load('audio/pop.mp3', function (buffer) {
@@ -128,6 +137,7 @@ function removeBee(beeInstance) {
       randomPositions.splice(beeIndex, 1)
     }
     popSound.play()
+    cryingSound.play()
     faceMaterial.map = worriedFaceTexture
 
     // Revert back to the happy face after 3 seconds
