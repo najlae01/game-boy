@@ -196,8 +196,8 @@ function removeBee(beeInstance) {
     ) {
       randomPositions.splice(beeIndex, 1)
     }
-    popSound.play()
-    cryingSound.play()
+    if (!popSound.isPlaying) popSound.play()
+    if (!cryingSound.isPlaying) cryingSound.play()
     faceMaterial.map = worriedFaceTexture
 
     // Revert back to the happy face after 3 seconds
