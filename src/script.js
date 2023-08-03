@@ -16,6 +16,9 @@ import portalFragmentShader from './shaders/portal/fragment.glsl'
 // var spector = new SPECTOR.Spector()
 // spector.displayUI()
 
+// Create an AudioContext after a user gesture is detected
+let audioContext
+
 /**
  * Sounds
  */
@@ -58,6 +61,46 @@ audioLoader.load('audio/bmo-sad.mp3', function (buffer) {
   cryingSound.setLoop(false)
   cryingSound.setVolume(0.5)
 })
+
+function createAudioContext() {
+  // Use type assertion here to let TypeScript know that webkitAudioContext is available
+  audioContext = new (window.AudioContext || window['webkitAudioContext'])()
+
+  const listener = new THREE.AudioListener()
+
+  const grassLandsAudio = new Audio()
+  grassLandsAudio.src = 'audio/grass-lands.mp3'
+  const grassLands = new THREE.Audio(listener)
+  grassLands.setMediaElementSource(grassLandsAudio)
+
+  const popSoundAudio = new Audio()
+  popSoundAudio.src = 'audio/pop.mp3'
+  const popSound = new THREE.Audio(listener)
+  popSound.setMediaElementSource(popSoundAudio)
+
+  const saysHiAudio = new Audio()
+  saysHiAudio.src = 'audio/bmo-says-hi.mp3'
+  const saysHi = new THREE.Audio(listener)
+  saysHi.setMediaElementSource(saysHiAudio)
+
+  const cryingSoundAudio = new Audio()
+  cryingSoundAudio.src = 'audio/bmo-sad.mp3'
+  const cryingSound = new THREE.Audio(listener)
+  cryingSound.setMediaElementSource(cryingSoundAudio)
+
+  // Play the videos when they are loaded
+  relaxedtextureVid.onloadeddata = () => {
+    relaxedtextureVid.play()
+  }
+  sleepytextureVid.onloadeddata = () => {
+    sleepytextureVid.play()
+  }
+  textureVid.onloadeddata = () => {
+    textureVid.play()
+  }
+}
+
+window.addEventListener('DOMContentLoaded', createAudioContext)
 
 // Texture loader
 const textureLoader = new THREE.TextureLoader()
