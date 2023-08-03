@@ -333,6 +333,7 @@ gltfLoader.load('ground.glb', (gltf) => {
   gltf.scene.traverse((child) => {
     child.material = groundMaterial
   })
+
   scene.add(gltf.scene)
 })
 
