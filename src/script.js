@@ -43,6 +43,14 @@ audioLoader.load('audio/pop.mp3', function (buffer) {
   popSound.setVolume(0.5)
 })
 
+const saysHi = new THREE.Audio(listener)
+
+audioLoader.load('audio/bmo-says-hi.mp3', function (buffer) {
+  saysHi.setBuffer(buffer)
+  saysHi.setLoop(false)
+  saysHi.setVolume(1)
+})
+
 const cryingSound = new THREE.Audio(listener)
 
 audioLoader.load('audio/bmo-sad.mp3', function (buffer) {
@@ -230,7 +238,7 @@ const bakedTreeMaterial = new THREE.MeshBasicMaterial({ map: bakedTree })
 let mixer
 gltfLoader.load('game-boy.glb', (gltf) => {
   mixer = new THREE.AnimationMixer(gltf.scene)
-  // console.log(gltf)
+  console.log(gltf)
   gltf.scene.scale.set(0.7, 0.7, 0.7)
   gltf.scene.position.y = 0.07
   gltf.scene.position.x = 0.45
@@ -239,16 +247,20 @@ gltfLoader.load('game-boy.glb', (gltf) => {
   })
   const face = gltf.scene.children.find((child) => child.name === 'face')
   face.material = faceMaterial
+  const sayingHiAction = mixer.clipAction(gltf.animations[0])
+  const sittingOnGroundAction = mixer.clipAction(gltf.animations[1])
+  const actionFace = mixer.clipAction(gltf.animations[4])
   // Revert back to the happy face after 3 seconds
   setTimeout(() => {
     faceMaterial.map = happyFace
+    saysHi.play()
+    sayingHiAction.reset()
+    sayingHiAction.setLoop(THREE.LoopOnce)
+    sayingHiAction.play()
   }, 8000)
-  // const animations = gltf.animations
-  // console.log(animations) // Check if animations are present
-  // load the animation
 
-  mixer.clipAction(gltf.animations[1]).play()
-  mixer.clipAction(gltf.animations[4]).play()
+  sittingOnGroundAction.play()
+  actionFace.play()
 
   scene.add(gltf.scene)
 })
