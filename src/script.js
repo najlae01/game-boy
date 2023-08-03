@@ -16,6 +16,32 @@ import portalFragmentShader from './shaders/portal/fragment.glsl'
 // var spector = new SPECTOR.Spector()
 // spector.displayUI()
 
+/**
+ * Sounds
+ */
+// create an AudioListener and add it to the camera
+const listener = new THREE.AudioListener()
+
+// load a sound and set it as the Audio object's buffer
+const audioLoader = new THREE.AudioLoader()
+
+// create a global audio source
+const popSound = new THREE.Audio(listener)
+
+audioLoader.load('audio/pop.mp3', function (buffer) {
+  popSound.setBuffer(buffer)
+  popSound.setLoop(false)
+  popSound.setVolume(0.5)
+})
+
+const cryingSound = new THREE.Audio(listener)
+
+audioLoader.load('audio/bmo-sad.mp3', function (buffer) {
+  cryingSound.setBuffer(buffer)
+  cryingSound.setLoop(false)
+  cryingSound.setVolume(0.5)
+})
+
 // Texture loader
 const textureLoader = new THREE.TextureLoader()
 
@@ -101,6 +127,7 @@ function removeBee(beeInstance) {
     ) {
       randomPositions.splice(beeIndex, 1)
     }
+    popSound.play()
     faceMaterial.map = worriedFaceTexture
 
     // Revert back to the happy face after 3 seconds
@@ -404,6 +431,7 @@ camera.position.x = 4
 camera.position.y = 4
 camera.position.z = 10
 scene.add(camera)
+camera.add(listener)
 
 // Controls
 const controls = new OrbitControls(camera, canvas)
